@@ -1,4 +1,4 @@
-package com.jfsoftwareservices.automation.config;
+package com.jfsoftwareservices.config;
 
 import io.github.cdimascio.dotenv.Dotenv;
 

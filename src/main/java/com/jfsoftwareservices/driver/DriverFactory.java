@@ -1,6 +1,6 @@
-package com.jfsoftwareservices.automation.driver;
+package com.jfsoftwareservices.driver;
 
-import com.jfsoftwareservices.automation.config.ConfigReader;
+import com.jfsoftwareservices.config.ConfigReader;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.WebDriver;

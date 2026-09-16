@@ -1,6 +1,6 @@
-package com.jfsoftwareservices.automation.pages;
+package com.jfsoftwareservices.pages;
 
-import com.jfsoftwareservices.automation.config.ConfigReader;
+import com.jfsoftwareservices.config.ConfigReader;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;

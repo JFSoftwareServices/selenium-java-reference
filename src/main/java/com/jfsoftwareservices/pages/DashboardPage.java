@@ -1,4 +1,4 @@
-package com.jfsoftwareservices.automation.pages;
+package com.jfsoftwareservices.pages;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;

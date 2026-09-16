@@ -1,6 +1,6 @@
-package com.jfsoftwareservices.automation.pages;
+package com.jfsoftwareservices.pages;
 
-import com.jfsoftwareservices.automation.pages.components.HeaderComponent;
+import com.jfsoftwareservices.pages.components.HeaderComponent;
 import org.openqa.selenium.WebDriver;
 
 /**
