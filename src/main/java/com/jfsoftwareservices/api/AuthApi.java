@@ -1,4 +1,4 @@
-package com.jfsoftwareservices.automation.api;
+package com.jfsoftwareservices.api;
 
 import io.restassured.response.Response;
 
