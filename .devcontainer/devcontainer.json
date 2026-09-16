@@ -1,6 +1,8 @@
 {
     "name": "selenium-java-automation",
-    "image": "mcr.microsoft.com/devcontainers1/java:1-21-bullseye",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
     "features": {
         "ghcr.io/devcontainers/features/java:1": {
             "version": "21",
