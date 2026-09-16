@@ -80,7 +80,7 @@ public final class DriverFactory {
                 WebDriverManager.chromedriver().setup();
                 yield new ChromeDriver(chromeOptions());
             }
-            default -> throw new IllegalArgumentException("Unsupported BROWSER: " + browser);
+            default -> throw new IllegalArgumentException("Unsupported TEST_BROWSER: " + browser);
         };
     }
 

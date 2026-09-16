@@ -46,7 +46,7 @@ public final class ConfigReader {
 
     /** e.g. "chrome" (default) or "firefox". */
     public static String browser() {
-        return get("BROWSER", "chrome").toLowerCase();
+        return get("TEST_BROWSER", "chrome").toLowerCase();
     }
 
     /**
