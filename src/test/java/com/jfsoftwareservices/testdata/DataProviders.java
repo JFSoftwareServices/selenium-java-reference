@@ -1,4 +1,4 @@
-package com.jfsoftwareservices.automation.testdata;
+package com.jfsoftwareservices.testdata;
 
 import org.testng.annotations.DataProvider;
 
