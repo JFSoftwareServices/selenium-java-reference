@@ -1,0 +1,19 @@
+# Build output
+target/
+*.class
+
+# Environment / secrets
+.env
+
+# IDE
+.idea/
+*.iml
+out/
+!.run/*.xml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
