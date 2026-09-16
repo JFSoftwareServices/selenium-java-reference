@@ -42,7 +42,6 @@ public class DashboardPage {
         product.findElement(By.xpath(".//button[normalize-space()='Add To Cart']")).click();
 
         wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//*[@role='alert'][contains(., 'Product Added To Cart')]")
-        ));
+                By.xpath("//*[@role='alert'][contains(., 'Product Added To Cart')]")));
     }
 }
