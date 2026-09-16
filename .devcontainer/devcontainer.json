@@ -1,0 +1,36 @@
+{
+    "name": "selenium-java-automation",
+    "image": "mcr.microsoft.com/devcontainers1/java:1-21-bullseye",
+    "features": {
+        "ghcr.io/devcontainers/features/java:1": {
+            "version": "21",
+            "installMaven": "true"
+        },
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+            "version": "latest"
+        }
+    },
+    "forwardPorts": [
+        4444,
+        7900
+    ],
+    "portsAttributes": {
+        "4444": {
+            "label": "Selenium Grid Hub"
+        },
+        "7900": {
+            "label": "noVNC (watch headed runs)"
+        }
+    },
+    "postCreateCommand": "bash .devcontainer/install-browsers.sh && mvn -q -B dependency:go-offline",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "vscjava.vscode-java-pack",
+                "vmware.vscode-boot-dev-pack",
+                "ms-azuretools.vscode-docker"
+            ]
+        }
+    },
+    "remoteUser": "vscode"
+}

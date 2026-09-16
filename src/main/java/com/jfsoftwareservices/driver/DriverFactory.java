@@ -12,6 +12,8 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 
 /**
@@ -74,7 +76,7 @@ public final class DriverFactory {
         return switch (browser) {
             case "firefox" -> {
                 WebDriverManager.firefoxdriver().setup();
-                yield new FirefoxDriver(firefoxOptions());
+                yield new FirefoxDriver(localFirefoxOptions());
             }
             case "chrome" -> {
                 WebDriverManager.chromedriver().setup();
@@ -88,7 +90,7 @@ public final class DriverFactory {
         MutableCapabilities capabilities = switch (browser) {
             case "firefox" -> firefoxOptions();
             case "chrome" -> chromeOptions();
-            default -> throw new IllegalArgumentException("Unsupported BROWSER: " + browser);
+            default -> throw new IllegalArgumentException("Unsupported TEST_BROWSER: " + browser);
         };
 
         try {
@@ -115,6 +117,26 @@ public final class DriverFactory {
         if (ConfigReader.isHeadless()) {
             options.addArguments("-headless");
         }
+        return options;
+    }
+
+    /**
+     * Local-only: Debian/Ubuntu's {@code firefox-esr} apt package (installed
+     * by {@code .devcontainer/install-browsers.sh}) provides a binary named
+     * {@code firefox-esr}, not {@code firefox} - which is what Selenium looks
+     * for by default. This override must stay local-only: applying it to
+     * {@link #firefoxOptions()} would send it as a capability to a Selenium
+     * Grid node too, where {@code selenium/node-firefox} ships a binary
+     * actually named {@code firefox} and the override would break it.
+     */
+    private static FirefoxOptions localFirefoxOptions() {
+        FirefoxOptions options = firefoxOptions();
+
+        Path firefoxEsr = Path.of("/usr/bin/firefox-esr");
+        if (Files.exists(firefoxEsr)) {
+            options.setBinary(firefoxEsr);
+        }
+
         return options;
     }
 }
