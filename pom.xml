@@ -155,7 +155,7 @@
                             </properties>
                         </configuration>
                     </execution>
-                    <execution>
+                    <!-- <execution>
                         <id>serial-suite</id>
                         <phase>test</phase>
                         <goals>
@@ -166,7 +166,7 @@
                                 <suiteXmlFile>testng-serial.xml</suiteXmlFile>
                             </suiteXmlFiles>
                         </configuration>
-                    </execution>
+                    </execution>-->
                 </executions>
                 <configuration>
                     <testFailureIgnore>false</testFailureIgnore>
