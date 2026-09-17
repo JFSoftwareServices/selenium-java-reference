@@ -1,4 +1,4 @@
-package com.jfsoftwareservices.tests.ui;
+package com.jfsoftwareservices.ui;
 
 import com.jfsoftwareservices.base.BaseTest;
 import com.jfsoftwareservices.testdata.DataProviders;
