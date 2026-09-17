@@ -15,13 +15,13 @@ public class CartContentsRemovalTest extends AuthenticatedTest {
         String productName = OrderTestData.DEFAULT.productName();
 
         pages.headerComponent.goHome();
-        //pages.dashboardPage.addProductToCart(productName);
+        pages.dashboardPage.addProductToCart(productName);
 
-        //pages.headerComponent.navigateToCart();
-        //pages.cartPage.waitForPageToLoad();
-        //pages.cartPage.verifyProductIsDisplayed(productName);
+        pages.headerComponent.navigateToCart();
+        pages.cartPage.waitForPageToLoad();
+        pages.cartPage.verifyProductIsDisplayed(productName);
 
-        ///pages.cartPage.removeFromCart(productName);
-        //pages.cartPage.verifyCartEmpty();
+        pages.cartPage.removeFromCart(productName);
+        pages.cartPage.verifyCartEmpty();
     }
 }
