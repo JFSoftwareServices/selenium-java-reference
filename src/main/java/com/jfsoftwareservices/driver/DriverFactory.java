@@ -2,6 +2,7 @@ package com.jfsoftwareservices.driver;
 
 import com.jfsoftwareservices.config.ConfigReader;
 import io.github.bonigarcia.wdm.WebDriverManager;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -17,47 +18,87 @@ import java.nio.file.Path;
 import java.time.Duration;
 
 /**
- * Creates one {@link WebDriver} per test thread.
+ * Creates one WebDriver instance per test thread.
+ *
  * <p>
- * Two modes, selected purely by configuration (no test code changes needed):
+ * Supports:
  * <ul>
- *   <li><b>Local</b> (default, used by IntelliJ / plain {@code mvn test}):
- *       WebDriverManager resolves a matching driver binary and launches a
- *       real local browser.</li>
- *   <li><b>Grid</b> (used by Docker Compose / Jenkins / AWS EC2): when
- *       {@code GRID_URL} is set, a {@link RemoteWebDriver} is created against
- *       the Selenium Grid hub instead, so the same test code runs unchanged
- *       against containerised chrome/firefox nodes.</li>
+ * <li>Local Chrome/Chromium</li>
+ * <li>Local Firefox</li>
+ * <li>Remote Chrome/Chromium via Selenium Grid</li>
+ * <li>Remote Firefox via Selenium Grid</li>
+ * <li>Headless execution</li>
+ * <li>Parallel TestNG execution via ThreadLocal</li>
  * </ul>
- * A {@link ThreadLocal} backs every driver so TestNG's thread-count-driven
- * parallel execution (see {@code testng-parallel.xml}) never shares a
- * browser session across threads.
+ *
+ * <p>
+ * Browser-specific configuration is handled by the appropriate
+ * browser options method, while common WebDriver configuration is
+ * applied centrally in {@link #configureDriver(WebDriver)}.
  */
 public final class DriverFactory {
 
     private static final ThreadLocal<WebDriver> DRIVER = new ThreadLocal<>();
-    private static final Duration IMPLICIT_WAIT = Duration.ofSeconds(2);
+
     private static final Duration PAGE_LOAD_TIMEOUT = Duration.ofSeconds(30);
 
+    private static final Dimension WINDOW_SIZE = new Dimension(1920, 1080);
+
     private DriverFactory() {
+        // Utility class
     }
 
+    /**
+     * Returns the WebDriver for the current test thread.
+     * Creates the driver if one has not already been created.
+     */
     public static WebDriver getDriver() {
-        if (DRIVER.get() == null) {
-            DRIVER.set(createDriver());
+
+        WebDriver driver = DRIVER.get();
+
+        if (driver == null) {
+            driver = createDriver();
+            DRIVER.set(driver);
         }
-        return DRIVER.get();
+
+        return driver;
     }
 
+    /**
+     * Quits and removes the WebDriver for the current test thread.
+     *
+     * <p>
+     * Cleanup is deliberately defensive:
+     * <ul>
+     * <li>Attempts to quit the browser even if the session is already
+     * partially broken.</li>
+     * <li>Always removes the driver from ThreadLocal.</li>
+     * <li>Does not allow a quit failure to prevent ThreadLocal cleanup.</li>
+     * </ul>
+     */
     public static void quitDriver() {
+
         WebDriver driver = DRIVER.get();
-        if (driver != null) {
+
+        if (driver == null) {
+            return;
+        }
+
+        try {
             driver.quit();
+        } catch (Exception e) {
+            // Browser/session may already have terminated.
+            // Do not allow cleanup failure to mask the original test failure.
+        } finally {
             DRIVER.remove();
         }
     }
 
+    /**
+     * Creates either a local or remote WebDriver based on configuration.
+     */
     private static WebDriver createDriver() {
+
         String browser = ConfigReader.browser();
         String gridUrl = ConfigReader.gridUrl();
 
@@ -65,74 +106,137 @@ public final class DriverFactory {
                 ? createRemoteDriver(browser, gridUrl)
                 : createLocalDriver(browser);
 
-        driver.manage().timeouts().implicitlyWait(IMPLICIT_WAIT);
-        driver.manage().timeouts().pageLoadTimeout(PAGE_LOAD_TIMEOUT);
-        driver.manage().window().maximize();
+        configureDriver(driver);
 
         return driver;
     }
 
+    /**
+     * Applies configuration common to all browsers and execution modes.
+     *
+     * <p>
+     * Implicit waits are deliberately not configured.
+     * The framework uses explicit waits for synchronisation.
+     */
+    private static void configureDriver(WebDriver driver) {
+
+        driver.manage()
+                .timeouts()
+                .pageLoadTimeout(PAGE_LOAD_TIMEOUT);
+
+        driver.manage()
+                .window()
+                .setSize(WINDOW_SIZE);
+    }
+
+    /**
+     * Creates a local WebDriver.
+     */
     private static WebDriver createLocalDriver(String browser) {
-        return switch (browser) {
-            case "firefox" -> {
-                WebDriverManager.firefoxdriver().setup();
-                yield new FirefoxDriver(localFirefoxOptions());
-            }
-            case "chrome" -> {
+
+        return switch (browser.toLowerCase()) {
+
+            case "chrome", "chromium" -> {
+
                 WebDriverManager.chromedriver().setup();
-                yield new ChromeDriver(chromeOptions());
+
+                yield new ChromeDriver(
+                        chromeOptions());
             }
-            default -> throw new IllegalArgumentException("Unsupported TEST_BROWSER: " + browser);
+
+            case "firefox" -> {
+
+                WebDriverManager.firefoxdriver().setup();
+
+                yield new FirefoxDriver(
+                        localFirefoxOptions());
+            }
+
+            default -> throw new IllegalArgumentException(
+                    "Unsupported TEST_BROWSER: " + browser);
         };
     }
 
-    private static WebDriver createRemoteDriver(String browser, String gridUrl) {
-        MutableCapabilities capabilities = switch (browser) {
-            case "firefox" -> firefoxOptions();
-            case "chrome" -> chromeOptions();
-            default -> throw new IllegalArgumentException("Unsupported TEST_BROWSER: " + browser);
+    /**
+     * Creates a RemoteWebDriver for Selenium Grid.
+     */
+    private static WebDriver createRemoteDriver(
+            String browser,
+            String gridUrl) {
+
+        MutableCapabilities capabilities = switch (browser.toLowerCase()) {
+
+            case "chrome", "chromium" ->
+                chromeOptions();
+
+            case "firefox" ->
+                firefoxOptions();
+
+            default ->
+                throw new IllegalArgumentException(
+                        "Unsupported TEST_BROWSER: " + browser);
         };
 
         try {
-            // Selenium 4's RemoteWebDriver auto-negotiates the W3C protocol
-            // with the hub, so no separate DesiredCapabilities wiring is needed.
-            return new RemoteWebDriver(URI.create(gridUrl).toURL(), capabilities);
+
+            return new RemoteWebDriver(
+                    URI.create(gridUrl).toURL(),
+                    capabilities);
+
         } catch (MalformedURLException e) {
-            throw new IllegalStateException("Invalid GRID_URL: " + gridUrl, e);
+
+            throw new IllegalStateException(
+                    "Invalid GRID_URL: " + gridUrl,
+                    e);
         }
     }
 
+    /**
+     * Creates Chrome/Chromium-specific options.
+     */
     private static ChromeOptions chromeOptions() {
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--remote-allow-origins=*");
-        options.addArguments("--disable-notifications");
-        if (ConfigReader.isHeadless()) {
-            options.addArguments("--headless=new", "--window-size=1920,1080");
-        }
-        return options;
-    }
 
-    private static FirefoxOptions firefoxOptions() {
-        FirefoxOptions options = new FirefoxOptions();
+        ChromeOptions options = new ChromeOptions();
+
+        options.addArguments(
+                "--remote-allow-origins=*",
+                "--disable-notifications");
+
         if (ConfigReader.isHeadless()) {
-            options.addArguments("-headless");
+            options.addArguments("--headless=new");
         }
+
         return options;
     }
 
     /**
-     * Local-only: Debian/Ubuntu's {@code firefox-esr} apt package (installed
-     * by {@code .devcontainer/install-browsers.sh}) provides a binary named
-     * {@code firefox-esr}, not {@code firefox} - which is what Selenium looks
-     * for by default. This override must stay local-only: applying it to
-     * {@link #firefoxOptions()} would send it as a capability to a Selenium
-     * Grid node too, where {@code selenium/node-firefox} ships a binary
-     * actually named {@code firefox} and the override would break it.
+     * Creates Firefox-specific options.
+     */
+    private static FirefoxOptions firefoxOptions() {
+
+        FirefoxOptions options = new FirefoxOptions();
+
+        if (ConfigReader.isHeadless()) {
+            options.addArguments("-headless");
+        }
+
+        return options;
+    }
+
+    /**
+     * Creates Firefox options for local execution.
+     *
+     * <p>
+     * Debian/Ubuntu environments may provide Firefox ESR as
+     * {@code /usr/bin/firefox-esr}. This binary override is intentionally
+     * local-only and must not be sent to Selenium Grid Firefox nodes.
      */
     private static FirefoxOptions localFirefoxOptions() {
+
         FirefoxOptions options = firefoxOptions();
 
         Path firefoxEsr = Path.of("/usr/bin/firefox-esr");
+
         if (Files.exists(firefoxEsr)) {
             options.setBinary(firefoxEsr);
         }

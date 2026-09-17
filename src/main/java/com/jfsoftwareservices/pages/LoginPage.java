@@ -7,30 +7,44 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import java.time.Duration;
+
+import static org.openqa.selenium.support.ui.ExpectedConditions.visibilityOf;
+import static org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable;
+
 public class LoginPage {
 
     private final WebDriver driver;
+    private final WebDriverWait wait;
 
-    @FindBy(xpath = "//button[normalize-space()='Login']")
+    @FindBy(id = "login")
     private WebElement signInButton;
 
-    @FindBy(xpath = "//input[@placeholder='email@example.com' or @name='userEmail']")
+    @FindBy(id = "userEmail")
     private WebElement usernameField;
 
-    @FindBy(xpath = "//input[@placeholder='enter your passsword' or @name='userPassword']")
+    @FindBy(id = "userPassword")
     private WebElement passwordField;
+
+    @FindBy(xpath = "//*[@role='alert' and contains(., 'Incorrect email or password')]")
+    private WebElement errorAlert;
 
     public LoginPage(WebDriver driver) {
         this.driver = driver;
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         PageFactory.initElements(driver, this);
     }
 
-    /**
-     * Navigates to the login/client entry point (redirects to dashboard if already
-     * authenticated).
-     */
     public void goTo() {
         driver.get(ConfigReader.baseUrl() + "/client");
+    }
+
+    public void waitForLoginForm() {
+        wait.until(visibilityOf(usernameField));
+        wait.until(visibilityOf(passwordField));
+        wait.until(elementToBeClickable(signInButton));
     }
 
     public void login(String username, String password) {
@@ -41,11 +55,7 @@ public class LoginPage {
         signInButton.click();
     }
 
-    public WebElement errorAlert() {
-        return driver.findElement(By.xpath("//*[@role='alert' and contains(., 'Incorrect email or password')]"));
-    }
-
-    public WebElement loginHeading() {
-        return driver.findElement(By.xpath("//h1[normalize-space()='Log in'] | //h2[normalize-space()='Log in']"));
+    public String getErrorMessage() {
+        return wait.until(visibilityOf(errorAlert)).getText();
     }
 }
