@@ -14,7 +14,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class CartPage {
 
-    private final WebDriver driver;
     private final WebDriverWait wait;
 
     @FindBy(xpath = "//div[contains(@class,'heading')]//h1[normalize-space()='My Cart']")
@@ -33,7 +32,6 @@ public class CartPage {
     private WebElement checkoutButton;
 
     public CartPage(WebDriver driver) {
-        this.driver = driver;
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
         PageFactory.initElements(driver, this);

@@ -13,7 +13,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class HeaderComponent {
 
-    private final WebDriver driver;
     private final WebDriverWait wait;
 
     @FindBy(css = "button[routerlink='/dashboard/']")
@@ -38,7 +37,6 @@ public class HeaderComponent {
     private WebElement myCartHeading;
 
     public HeaderComponent(WebDriver driver) {
-        this.driver = driver;
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
         PageFactory.initElements(driver, this);

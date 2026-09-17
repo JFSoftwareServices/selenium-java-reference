@@ -14,7 +14,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class OrdersReviewPage {
 
-    private final WebDriver driver;
     private final WebDriverWait wait;
 
     @FindBy(css = "input[placeholder='Select Country']")
@@ -36,7 +35,6 @@ public class OrdersReviewPage {
     private WebElement orderIdLabel;
 
     public OrdersReviewPage(WebDriver driver) {
-        this.driver = driver;
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
         PageFactory.initElements(driver, this);

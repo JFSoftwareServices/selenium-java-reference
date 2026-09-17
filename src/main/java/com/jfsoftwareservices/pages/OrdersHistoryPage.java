@@ -13,7 +13,6 @@ import java.util.List;
 
 public class OrdersHistoryPage {
 
-    private final WebDriver driver;
     private final WebDriverWait wait;
 
     @FindBy(css = "tbody")
@@ -26,7 +25,6 @@ public class OrdersHistoryPage {
     private WebElement orderIdDetails;
 
     public OrdersHistoryPage(WebDriver driver) {
-        this.driver = driver;
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
         PageFactory.initElements(driver, this);
