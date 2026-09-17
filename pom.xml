@@ -37,8 +37,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Dependency versions -->
-        <selenium.version>4.27.0</selenium.version>
-        <webdrivermanager.version>5.9.2</webdrivermanager.version>
+        <selenium.version>4.49.0</selenium.version>
+        <webdrivermanager.version>6.3.4</webdrivermanager.version>
         <testng.version>7.10.2</testng.version>
         <restassured.version>5.5.0</restassured.version>
         <assertj.version>3.26.3</assertj.version>
@@ -132,6 +132,11 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven.surefire.plugin.version}</version>
                 <executions>
+                    <!-- Disable Maven's default Surefire execution -->
+                    <execution>
+                        <id>default-test</id>
+                        <phase>none</phase>
+                    </execution>
                     <execution>
                         <id>parallel-suite</id>
                         <phase>test</phase>
