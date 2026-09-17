@@ -3,6 +3,8 @@ package com.jfsoftwareservices.pages;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -15,29 +17,51 @@ public class OrdersReviewPage {
     private final WebDriver driver;
     private final WebDriverWait wait;
 
-    private static final By COUNTRY_FIELD = By.cssSelector("input[placeholder='Select Country']");
-    private static final By COUNTRY_RESULTS_DROPDOWN = By.cssSelector(".ta-results");
-    private static final By EMAIL_ID_LABEL = By.cssSelector(".user__name label");
-    private static final By SUBMIT_LINK = By.xpath("//a[contains(., 'PLACE ORDER')]");
-    private static final By ORDER_CONFIRMATION_TEXT = By.cssSelector(".hero-primary");
-    private static final By ORDER_ID_LABEL = By.cssSelector(".em-spacer-1 .ng-star-inserted");
+    @FindBy(css = "input[placeholder='Select Country']")
+    private WebElement countryField;
+
+    @FindBy(css = ".ta-results")
+    private WebElement countryResultsDropdown;
+
+    @FindBy(css = ".user__name label")
+    private WebElement emailIdLabel;
+
+    @FindBy(xpath = "//a[normalize-space()='Place Order']")
+    private WebElement placeOrderLink;
+
+    @FindBy(css = ".hero-primary")
+    private WebElement orderConfirmationText;
+
+    @FindBy(css = ".em-spacer-1 .ng-star-inserted")
+    private WebElement orderIdLabel;
 
     public OrdersReviewPage(WebDriver driver) {
         this.driver = driver;
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
+        PageFactory.initElements(driver, this);
+    }
+
+    public void waitForPageToLoad() {
+        wait.until(ExpectedConditions.urlContains("/#/dashboard/order"));
+        wait.until(ExpectedConditions.elementToBeClickable(placeOrderLink));
     }
 
     public void searchCountry(String countryCode) {
-        WebElement field = driver.findElement(COUNTRY_FIELD);
+
         countryCode.chars().forEach(c ->
-                field.sendKeys(String.valueOf((char) c))
+                countryField.sendKeys(String.valueOf((char) c))
         );
-        wait.until(ExpectedConditions.visibilityOfElementLocated(COUNTRY_RESULTS_DROPDOWN));
+
+        wait.until(ExpectedConditions.visibilityOf(countryResultsDropdown));
     }
 
     public void selectCountry(String countryName) {
-        WebElement option = driver.findElement(COUNTRY_RESULTS_DROPDOWN)
-                .findElement(By.xpath(".//*[normalize-space()='" + countryName + "']"));
+
+        WebElement option = countryResultsDropdown.findElement(
+                By.xpath(".//*[normalize-space()='" + countryName + "']")
+        );
+
         option.click();
     }
 
@@ -47,24 +71,34 @@ public class OrdersReviewPage {
     }
 
     public void verifyEmailIdMatches(String expectedEmail) {
-        assertThat(driver.findElement(EMAIL_ID_LABEL).getText()).isEqualTo(expectedEmail);
+        assertThat(emailIdLabel.getText())
+                .isEqualTo(expectedEmail);
     }
 
-    public void submit() {
-        driver.findElement(SUBMIT_LINK).click();
+    public void placeOrder() {
+        wait.until(ExpectedConditions.elementToBeClickable(placeOrderLink))
+                .click();
     }
 
     public void verifyOrderConfirmation() {
-        verifyOrderConfirmation("Thankyou for the order.");
+        verifyOrderConfirmation("THANKYOU FOR THE ORDER.");
     }
 
     public void verifyOrderConfirmation(String expectedText) {
-        WebElement confirmation = wait.until(ExpectedConditions.visibilityOfElementLocated(ORDER_CONFIRMATION_TEXT));
-        assertThat(confirmation.getText()).isEqualTo(expectedText);
+
+        WebElement confirmation = wait.until(
+                ExpectedConditions.visibilityOf(orderConfirmationText)
+        );
+
+        assertThat(confirmation.getText())
+                .isEqualTo(expectedText);
     }
 
     public String getOrderId() {
-        String raw = driver.findElement(ORDER_ID_LABEL).getText();
-        return raw == null ? null : raw.replace("|", "").trim();
+        String raw = orderIdLabel.getText();
+
+        return raw == null
+                ? null
+                : raw.replace("|", "").trim();
     }
 }
