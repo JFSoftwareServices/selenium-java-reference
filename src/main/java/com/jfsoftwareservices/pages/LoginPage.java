@@ -58,4 +58,10 @@ public class LoginPage {
     public String getErrorMessage() {
         return wait.until(visibilityOf(errorAlert)).getText();
     }
+
+    public void verifyLoggedOut() {
+        wait.until(visibilityOf(usernameField));
+        wait.until(visibilityOf(passwordField));
+        wait.until(elementToBeClickable(signInButton));
+    }
 }
