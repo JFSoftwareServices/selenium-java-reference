@@ -1,7 +1,9 @@
 package com.jfsoftwareservices.pages.components;
 
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -14,49 +16,61 @@ public class HeaderComponent {
     private final WebDriver driver;
     private final WebDriverWait wait;
 
-    private static final By HOME_LINK = By.cssSelector("button[routerlink='/dashboard']");
-    private static final By ORDERS_BUTTON = By.cssSelector("button[routerlink='/dashboard/myorders']");
-    private static final By CART_BUTTON = By.cssSelector("button[routerlink='/dashboard/cart']");
-    private static final By SIGN_OUT_BUTTON = By.xpath("//button[normalize-space()='Sign Out']");
+    @FindBy(css = "button[routerlink='/dashboard/']")
+    private WebElement homeLink;
+
+    @FindBy(css = "button[routerlink='/dashboard/myorders']")
+    private WebElement ordersButton;
+
+    @FindBy(css = "button[routerlink='/dashboard/cart']")
+    private WebElement cartButton;
+
+    @FindBy(xpath = "//button[normalize-space()='Sign Out']")
+    private WebElement signOutButton;
+
+    @FindBy(css = "#sidebar")
+    private WebElement sidebar;
+
+    @FindBy(xpath = "//*[self::h1 or self::h2][normalize-space()='Your Orders']")
+    private WebElement yourOrdersHeading;
+
+    @FindBy(xpath = "//*[self::h1 or self::h2][normalize-space()='My Cart']")
+    private WebElement myCartHeading;
 
     public HeaderComponent(WebDriver driver) {
         this.driver = driver;
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
+        PageFactory.initElements(driver, this);
     }
 
     public void goHome() {
-        driver.findElement(HOME_LINK).click();
+        homeLink.click();
 
         wait.until(ExpectedConditions.urlMatches(".*#/dashboard/dash$"));
-        wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//*[self::h1 or self::h2][normalize-space()='Filters']")
-        ));
+        wait.until(ExpectedConditions.visibilityOf(sidebar));
     }
 
     public void navigateToOrders() {
-        driver.findElement(ORDERS_BUTTON).click();
+        ordersButton.click();
 
         wait.until(ExpectedConditions.urlMatches(".*#/dashboard/myorders$"));
-        wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//*[self::h1 or self::h2][normalize-space()='Your Orders']")
-        ));
+        wait.until(ExpectedConditions.visibilityOf(yourOrdersHeading));
     }
 
     public void navigateToCart() {
-        driver.findElement(CART_BUTTON).click();
+        cartButton.click();
 
         wait.until(ExpectedConditions.urlMatches(".*#/dashboard/cart$"));
-        wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//*[self::h1 or self::h2][normalize-space()='My Cart']")
-        ));
+        wait.until(ExpectedConditions.visibilityOf(myCartHeading));
     }
 
     public void signOut() {
-        driver.findElement(SIGN_OUT_BUTTON).click();
+        signOutButton.click();
     }
 
     public void verifyLoggedIn() {
-        assertThat(wait.until(ExpectedConditions.visibilityOfElementLocated(SIGN_OUT_BUTTON)).isDisplayed())
-                .isTrue();
+        assertThat(
+                wait.until(ExpectedConditions.visibilityOf(signOutButton)).isDisplayed()).isTrue();
     }
 }

@@ -2,6 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.jfsoftwareservices</groupId>
@@ -10,11 +11,13 @@
     <packaging>jar</packaging>
 
     <name>selenium-java-automation</name>
+
     <description>
         Java + Selenium 4 UI/API automation framework demonstrating Page Object Model,
         API-based authentication, a TestNG data-driven suite, Selenium Grid execution
         via Docker Compose, and CI/CD via Jenkins/GitHub Actions to AWS EC2.
     </description>
+
     <url>https://github.com/JFSoftwareServices/selenium-java-automation</url>
 
     <licenses>
@@ -49,11 +52,12 @@
         <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
         <maven.surefire.plugin.version>3.5.2</maven.surefire.plugin.version>
 
-        <!-- Runtime configuration, overridable via -D or environment (Docker/CI) -->
+        <!-- Runtime configuration, overridable via -D or environment -->
         <suite.thread.count>4</suite.thread.count>
     </properties>
 
     <dependencies>
+
         <!-- Selenium WebDriver -->
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
@@ -61,37 +65,35 @@
             <version>${selenium.version}</version>
         </dependency>
 
-        <!-- Manages local browser driver binaries; bypassed automatically when
-             pointed at a remote Selenium Grid (see DriverFactory). -->
+        <!-- WebDriverManager -->
         <dependency>
             <groupId>io.github.bonigarcia</groupId>
             <artifactId>webdrivermanager</artifactId>
             <version>${webdrivermanager.version}</version>
         </dependency>
 
-        <!-- Test runner: TestNG, for data-driven providers, groups, and
-             XML-suite-controlled parallel/serial execution. -->
+        <!-- TestNG -->
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>${testng.version}</version>
         </dependency>
 
-        <!-- REST Assured, used for API-based authentication and the API test suite. -->
+        <!-- REST Assured -->
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
             <version>${restassured.version}</version>
         </dependency>
 
-        <!-- Fluent assertions -->
+        <!-- AssertJ -->
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <version>${assertj.version}</version>
         </dependency>
 
-        <!-- .env support, mirrors the original dotenv/config usage -->
+        <!-- dotenv -->
         <dependency>
             <groupId>io.github.cdimascio</groupId>
             <artifactId>dotenv-java</artifactId>
@@ -104,76 +106,183 @@
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j.version}</version>
         </dependency>
+
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>${slf4j.version}</version>
         </dependency>
+
     </dependencies>
 
     <build>
+
         <plugins>
+
+            <!-- Maven Compiler -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven.compiler.plugin.version}</version>
             </plugin>
 
-            <!--
-              Two Surefire executions bound to the same `test` phase, run in
-              declaration order. This reproduces the original npm script
-              `test:parallel && test:serial`:
-                1. testng-parallel.xml - independent journeys, thread-count driven
-                2. testng-serial.xml   - account-mutating journeys, forced single-threaded
-              `mvn test` alone runs both; CI and Docker Compose call `mvn test` as one step.
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven.surefire.plugin.version}</version>
-                <executions>
-                    <!-- Disable Maven's default Surefire execution -->
-                    <execution>
-                        <id>default-test</id>
-                        <phase>none</phase>
-                    </execution>
-                    <execution>
-                        <id>parallel-suite</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>test</goal>
-                        </goals>
+        </plugins>
+
+    </build>
+
+    <!-- ============================================================= -->
+    <!-- Maven Profiles                                                 -->
+    <!-- ============================================================= -->
+
+    <profiles>
+
+        <!-- ========================================================= -->
+        <!-- DEFAULT: Run parallel suite followed by serial suite      -->
+        <!-- ========================================================= -->
+
+        <profile>
+            <id>full</id>
+
+            <!-- Automatically active when no other profile is selected -->
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+
+            <build>
+                <plugins>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${maven.surefire.plugin.version}</version>
+
                         <configuration>
+                            <testFailureIgnore>false</testFailureIgnore>
+                        </configuration>
+
+                        <executions>
+
+                            <!-- Parallel suite -->
+                            <execution>
+                                <id>parallel-suite</id>
+                                <phase>test</phase>
+
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+
+                                <configuration>
+                                    <suiteXmlFiles>
+                                        <suiteXmlFile>
+                                            testng-parallel.xml
+                                        </suiteXmlFile>
+                                    </suiteXmlFiles>
+
+                                    <properties>
+                                        <property>
+                                            <name>dataproviderthreadcount</name>
+                                            <value>${suite.thread.count}</value>
+                                        </property>
+                                    </properties>
+                                </configuration>
+                            </execution>
+
+                            <!-- Serial suite -->
+                            <execution>
+                                <id>serial-suite</id>
+                                <phase>test</phase>
+
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+
+                                <configuration>
+                                    <suiteXmlFiles>
+                                        <suiteXmlFile>
+                                            testng-serial.xml
+                                        </suiteXmlFile>
+                                    </suiteXmlFiles>
+                                </configuration>
+                            </execution>
+
+                        </executions>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
+
+
+        <!-- ========================================================= -->
+        <!-- PARALLEL ONLY                                              -->
+        <!-- ========================================================= -->
+
+        <profile>
+            <id>parallel</id>
+
+            <build>
+                <plugins>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${maven.surefire.plugin.version}</version>
+
+                        <configuration>
+                            <testFailureIgnore>false</testFailureIgnore>
+
                             <suiteXmlFiles>
-                                <suiteXmlFile>testng-parallel.xml</suiteXmlFile>
+                                <suiteXmlFile>
+                                    testng-parallel.xml
+                                </suiteXmlFile>
                             </suiteXmlFiles>
+
                             <properties>
                                 <property>
                                     <name>dataproviderthreadcount</name>
                                     <value>${suite.thread.count}</value>
                                 </property>
                             </properties>
+
                         </configuration>
-                    </execution>
-                    <execution>
-                        <id>serial-suite</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>test</goal>
-                        </goals>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
+
+
+        <!-- ========================================================= -->
+        <!-- SERIAL ONLY                                                -->
+        <!-- ========================================================= -->
+
+        <profile>
+            <id>serial</id>
+
+            <build>
+                <plugins>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${maven.surefire.plugin.version}</version>
+
                         <configuration>
+                            <testFailureIgnore>false</testFailureIgnore>
+
                             <suiteXmlFiles>
-                                <suiteXmlFile>testng-serial.xml</suiteXmlFile>
+                                <suiteXmlFile>
+                                    testng-serial.xml
+                                </suiteXmlFile>
                             </suiteXmlFiles>
+
                         </configuration>
-                    </execution>
-                </executions>
-                <configuration>
-                    <testFailureIgnore>false</testFailureIgnore>
-                    <!-- Individual runs (IntelliJ, `mvn test -Dtest=...`) still work
-                         normally; these executions only govern the full-suite `mvn test`. -->
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
+
+    </profiles>
+
 </project>

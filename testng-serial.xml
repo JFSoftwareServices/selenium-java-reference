@@ -3,10 +3,16 @@
 
 <suite name="Serial Suite" thread-count="1">
 
-    <test name="UI Tests">
+    <test name="Login and Purchase">
         <classes>
             <class name="com.jfsoftwareservices.ui.LoginBrowsePurchaseTest"/>
         </classes>
     </test>
+
+    <test name="Cart Contents Removal">
+    <classes>
+        <class name="com.jfsoftwareservices.ui.CartContentsRemovalTest"/>
+    </classes>
+</test>
 
 </suite>
