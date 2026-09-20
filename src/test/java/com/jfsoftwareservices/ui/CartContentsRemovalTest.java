@@ -6,11 +6,11 @@ import org.testng.annotations.Test;
 
 /**
  * Starts authenticated (see {@link AuthenticatedTest}) and mutates the
- * account's cart, so it belongs to the "serial" group.
+ * account's cart.
  */
 public class CartContentsRemovalTest extends AuthenticatedTest {
 
-    @Test(groups = "serial", description = "adds a product then removes it, leaving the cart empty")
+    @Test(description = "adds a product then removes it, leaving the cart empty")
     public void addsThenRemovesProductLeavingCartEmpty() {
         String productName = OrderTestData.DEFAULT.productName();
 

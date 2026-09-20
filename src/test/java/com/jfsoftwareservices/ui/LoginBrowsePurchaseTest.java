@@ -20,7 +20,7 @@ public class LoginBrowsePurchaseTest extends BaseTest {
         pages.loginPage.goTo();
     }
 
-    @Test(groups = "serial", dataProvider = "checkoutJourneys", dataProviderClass = DataProviders.class,
+    @Test(dataProvider = "checkoutJourneys", dataProviderClass = DataProviders.class,
             description = "logs in, adds a product to cart, and completes checkout")
     public void logsInAddsToCartAndCompletesCheckout(OrderTestData order, CountrySearchData country) {
         pages.loginPage.login(testUserEmail, testUserPassword);

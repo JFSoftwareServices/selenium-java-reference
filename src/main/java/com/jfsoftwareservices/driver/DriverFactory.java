@@ -55,7 +55,7 @@ public final class DriverFactory {
     public static WebDriver getDriver() {
 
         WebDriver driver = DRIVER.get();
-
+    
         if (driver == null) {
             driver = createDriver();
             DRIVER.set(driver);
@@ -200,7 +200,11 @@ public final class DriverFactory {
 
         options.addArguments(
                 "--remote-allow-origins=*",
-                "--disable-notifications");
+                "--disable-notifications",
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-gpu",
+                "--disable-software-rasterizer");
 
         if (ConfigReader.isHeadless()) {
             options.addArguments("--headless=new");

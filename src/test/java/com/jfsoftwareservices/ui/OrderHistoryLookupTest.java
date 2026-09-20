@@ -10,11 +10,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Places a fresh order, then confirms it is retrievable from order history -
- * account-mutating, so it belongs to the "serial" group.
+ * account-mutating.
  */
 public class OrderHistoryLookupTest extends AuthenticatedTest {
 
-    @Test(groups = "serial", dataProvider = "checkoutJourneys", dataProviderClass = DataProviders.class,
+    @Test(dataProvider = "checkoutJourneys", dataProviderClass = DataProviders.class,
             description = "places an order then finds it in order history")
     public void placesOrderThenFindsItInOrderHistory(OrderTestData order, CountrySearchData country) {
         pages.headerComponent.goHome();
