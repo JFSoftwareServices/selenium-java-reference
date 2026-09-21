@@ -12,9 +12,10 @@ import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class OrdersReviewPage {
+public class CheckoutPage {
 
     private final WebDriverWait wait;
+    private static final String URL_FRAGMENT = "/#/dashboard/order";
 
     @FindBy(css = "input[placeholder='Select Country']")
     private WebElement countryField;
@@ -34,67 +35,74 @@ public class OrdersReviewPage {
     @FindBy(css = ".em-spacer-1 .ng-star-inserted")
     private WebElement orderIdLabel;
 
-    public OrdersReviewPage(WebDriver driver) {
+    public CheckoutPage(WebDriver driver) {
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-
         PageFactory.initElements(driver, this);
     }
 
-    public void waitForPageToLoad() {
-        wait.until(ExpectedConditions.urlContains("/#/dashboard/order"));
-        wait.until(ExpectedConditions.elementToBeClickable(placeOrderLink));
+    // Confirms URL + one anchor element are ready — not a guarantee that
+    // every element on the page has rendered. Action methods below wait on
+    // their own targets individually.
+    public CheckoutPage waitUntilLoaded() {
+        wait.until(ExpectedConditions.urlContains(URL_FRAGMENT));
+        wait.until(ExpectedConditions.visibilityOf(placeOrderLink));
+        return this;
     }
 
-    public void searchCountry(String countryCode) {
+    public CheckoutPage searchCountry(String countryCode) {
 
-        countryCode.chars().forEach(c ->
-                countryField.sendKeys(String.valueOf((char) c))
-        );
+        countryCode.chars().forEach(c -> countryField.sendKeys(String.valueOf((char) c)));
 
         wait.until(ExpectedConditions.visibilityOf(countryResultsDropdown));
+        return this;
     }
 
-    public void selectCountry(String countryName) {
+    public CheckoutPage selectCountry(String countryName) {
 
         WebElement option = countryResultsDropdown.findElement(
-                By.xpath(".//*[normalize-space()='" + countryName + "']")
-        );
+                By.xpath(".//*[normalize-space()='" + countryName + "']"));
 
         option.click();
+        return this;
     }
 
-    public void searchCountryAndSelect(String countryCode, String countryName) {
+    public CheckoutPage searchCountryAndSelect(String countryCode, String countryName) {
         searchCountry(countryCode);
         selectCountry(countryName);
+        return this;
     }
 
-    public void verifyEmailIdMatches(String expectedEmail) {
+    public CheckoutPage verifyEmailIdMatches(String expectedEmail) {
         assertThat(emailIdLabel.getText())
                 .isEqualTo(expectedEmail);
+        return this;
     }
 
-    public void placeOrder() {
+    // Stays on this same page — the confirmation elements (orderConfirmationText,
+    // orderIdLabel) render in place here rather than navigating to a new page,
+    // so unlike checkout()/goToDashboard() there's no separate page object to
+    // return.
+    public CheckoutPage placeOrder() {
         wait.until(ExpectedConditions.elementToBeClickable(placeOrderLink))
                 .click();
+        wait.until(ExpectedConditions.visibilityOf(orderConfirmationText));
+        return this;
     }
 
-    public void verifyOrderConfirmation() {
-        verifyOrderConfirmation("THANKYOU FOR THE ORDER.");
+    public CheckoutPage verifyOrderConfirmation() {
+        return verifyOrderConfirmation("THANKYOU FOR THE ORDER.");
     }
 
-    public void verifyOrderConfirmation(String expectedText) {
-
+    public CheckoutPage verifyOrderConfirmation(String expectedText) {
         WebElement confirmation = wait.until(
-                ExpectedConditions.visibilityOf(orderConfirmationText)
-        );
-
+                ExpectedConditions.visibilityOf(orderConfirmationText));
         assertThat(confirmation.getText())
                 .isEqualTo(expectedText);
+        return this;
     }
 
     public String getOrderId() {
         String raw = orderIdLabel.getText();
-
         return raw == null
                 ? null
                 : raw.replace("|", "").trim();

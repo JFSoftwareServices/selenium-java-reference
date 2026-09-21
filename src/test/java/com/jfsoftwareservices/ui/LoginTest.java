@@ -1,6 +1,7 @@
 package com.jfsoftwareservices.ui;
 
 import com.jfsoftwareservices.base.BaseTest;
+import com.jfsoftwareservices.pages.LoginPage;
 import com.jfsoftwareservices.testdata.DataProviders;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -8,29 +9,22 @@ import org.testng.annotations.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Extends {@link BaseTest} directly (not {@code AuthenticatedTest}) because
- * these tests specifically exercise the UI login flow and must start logged
- * out.
+ * Performs canonical negative UI login journeys.
  */
 public class LoginTest extends BaseTest {
 
+    private LoginPage loginPage;
+
     @BeforeMethod(dependsOnMethods = "setUpDriver")
     public void navigateToLoginPage() {
-        pages.loginPage.goTo();
-        pages.loginPage.waitForLoginForm();
+        loginPage = new LoginPage(driver).navigateTo();
     }
 
-    @Test(description = "logs in successfully with valid credentials")
-    public void logsInSuccessfullyWithValidCredentials() {
-        pages.loginPage.login(testUserEmail, testUserPassword);
+    @Test(dataProvider = "invalidCredentials", dataProviderClass = DataProviders.class, description = "rejects invalid credentials and displays a login error")
+    public void rejectsInvalidCredentials(String username, String password) {
+        loginPage.login(username, password);
 
-        pages.headerComponent.verifyLoggedIn();
+        assertThat(loginPage.getErrorMessage())
+                .isEqualTo("Incorrect email or password.");
     }
-
-    @Test(dataProvider = "invalidCredentials", dataProviderClass = DataProviders.class, description = "shows an error with invalid credentials")
-    public void showsErrorWithInvalidCredentials(String username, String password) {
-        pages.loginPage.login(username, password);
-
-        assertThat(pages.loginPage.getErrorMessage()).isEqualTo("Incorrect email or password.");
-    }
-} 
+}

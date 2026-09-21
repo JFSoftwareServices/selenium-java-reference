@@ -1,23 +1,31 @@
 package com.jfsoftwareservices.pages;
 
+import com.jfsoftwareservices.config.ConfigReader;
+
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.openqa.selenium.support.ui.ExpectedConditions.*;
 
 public class CartPage {
 
+    private final WebDriver driver;
     private final WebDriverWait wait;
+    private static final String URL_FRAGMENT = "/#/dashboard/cart";
 
     @FindBy(xpath = "//div[contains(@class,'heading')]//h1[normalize-space()='My Cart']")
     private WebElement cartHeading;
+
+    @FindBy(css = ".cartWrap")
+    private WebElement cart;
 
     @FindBy(xpath = "//li[contains(@class,'totalRow')][.//*[normalize-space()='Total']]//*[contains(@class,'value')]")
     private WebElement totalValue;
@@ -32,15 +40,23 @@ public class CartPage {
     private WebElement checkoutButton;
 
     public CartPage(WebDriver driver) {
+        this.driver = driver;
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-
         PageFactory.initElements(driver, this);
-
     }
 
-    public void waitForPageToLoad() {
-        wait.until(ExpectedConditions.visibilityOf(cartHeading));
-        wait.until(ExpectedConditions.elementToBeClickable(checkoutButton));
+    public CartPage navigateTo() {
+        driver.get(ConfigReader.baseUrl() + URL_FRAGMENT);
+        return waitUntilLoaded();
+    }
+
+    // Confirms the expected URL and cart are ready.
+    // This does not guarantee that every element on the page has rendered.
+    // Action methods wait for their own target elements individually.
+    public CartPage waitUntilLoaded() {
+        wait.until(urlContains(URL_FRAGMENT));
+        wait.until(visibilityOf(cart));
+        return this;
     }
 
     public List<WebElement> productRows() {
@@ -51,24 +67,16 @@ public class CartPage {
         return productRows().size();
     }
 
-    public List<String> getProductNames() {
-        return productRows().stream()
-                .map(WebElement::getText)
-                .toList();
-    }
-
     public void verifyProductIsDisplayed(String productName) {
-        boolean present = getProductNames().stream()
-                .anyMatch(name -> name.contains(productName));
-
-        assertThat(present)
-                .as("'%s' displayed in cart", productName)
-                .isTrue();
+        WebElement product = wait.until(
+                visibilityOfElementLocated(
+                        By.xpath("//h3[normalize-space()='" + productName + "']")));
+        assertThat(product.isDisplayed()).isTrue();
     }
 
     public double getTotalValue() {
         WebElement total = wait.until(
-                ExpectedConditions.visibilityOf(totalValue));
+                visibilityOf(totalValue));
 
         String raw = total.getText()
                 .replace("$", "")
@@ -77,17 +85,16 @@ public class CartPage {
         return raw.isBlank() ? 0 : Double.parseDouble(raw);
     }
 
-    public void checkout() {
-        wait.until(ExpectedConditions.elementToBeClickable(checkoutButton))
-                .click();
+    public CheckoutPage checkout() {
+        wait.until(elementToBeClickable(checkoutButton)).click();
+        return new CheckoutPage(driver).waitUntilLoaded();
     }
 
     /**
      * Removes a product from the cart.
      * Expects exactly one matching row to be present.
      */
-    public void removeFromCart(String productName) {
-
+    public CartPage removeFromCart(String productName) {
         List<WebElement> matching = productRows().stream()
                 .filter(row -> row.getText().contains(productName))
                 .toList();
@@ -98,14 +105,20 @@ public class CartPage {
 
         WebElement row = matching.get(0);
 
-        row.findElement(
-                org.openqa.selenium.By.cssSelector("button.btn.btn-danger")).click();
+        row.findElement(By.cssSelector("button.btn.btn-danger")).click();
 
         wait.until(driver1 -> productRows().stream()
                 .noneMatch(row1 -> row1.getText().contains(productName)));
+
+        return this;
     }
 
     public void verifyCartEmpty() {
-        wait.until(ExpectedConditions.visibilityOf(emptyCartMessage));
+        wait.until(visibilityOf(emptyCartMessage));
+    }
+
+    public boolean isDisplayed() {
+        wait.until(visibilityOf(cartHeading));
+        return cartHeading.isDisplayed();
     }
 }

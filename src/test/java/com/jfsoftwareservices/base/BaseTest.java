@@ -3,7 +3,6 @@ package com.jfsoftwareservices.base;
 import com.jfsoftwareservices.config.ConfigReader;
 import com.jfsoftwareservices.driver.DriverFactory;
 import com.jfsoftwareservices.listeners.ScreenshotListener;
-import com.jfsoftwareservices.pages.Pages;
 import org.openqa.selenium.WebDriver;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -15,13 +14,14 @@ import org.testng.annotations.Listeners;
  * By default a fresh, unauthenticated browser session is created for each
  * test method (safe for TestNG's thread-count-driven parallel execution -
  * see {@code testng-parallel.xml}). {@link AuthenticatedTest} extends this
- * to additionally seed an authenticated session.
+ * to additionally seed an authenticated session. Test classes needing a
+ * logged-out starting state (e.g. {@code LoginTest}) can rely on this
+ * guarantee directly, without any explicit session-clearing of their own.
  */
 @Listeners(ScreenshotListener.class)
 public abstract class BaseTest {
 
     protected WebDriver driver;
-    protected Pages pages;
     protected String baseUrl;
     protected String testUserEmail;
     protected String testUserPassword;
@@ -33,7 +33,6 @@ public abstract class BaseTest {
         testUserPassword = ConfigReader.testUserPassword();
 
         driver = DriverFactory.getDriver();
-        pages = new Pages(driver);
     }
 
     @AfterMethod(alwaysRun = true)

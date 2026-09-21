@@ -9,13 +9,16 @@ import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import java.time.Duration;
 
+import static org.openqa.selenium.support.ui.ExpectedConditions.urlContains;
 import static org.openqa.selenium.support.ui.ExpectedConditions.visibilityOf;
-import static org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable;
+import static org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable;;
 
 public class LoginPage {
 
     private final WebDriver driver;
     private final WebDriverWait wait;
+
+    private static final String URL_FRAGMENT = "client/#/auth/login";
 
     @FindBy(id = "login")
     private WebElement signInButton;
@@ -35,31 +38,43 @@ public class LoginPage {
         PageFactory.initElements(driver, this);
     }
 
-    public void goTo() {
-        driver.get(ConfigReader.baseUrl() + "/client");
+    public LoginPage navigateTo() {
+        driver.get(ConfigReader.baseUrl() + URL_FRAGMENT);
+        return waitUntilLoaded();
     }
 
-    public void waitForLoginForm() {
+    // Navigates to the login URL without waiting for the form to render.
+    // Use this when you don't need the UI to be interactive yet (e.g.
+    // AuthenticatedTest, which authenticates via API and only needs the
+    // browser to be on the app's origin so localStorage can be set).
+    public LoginPage navigateWithoutWaiting() {
+        driver.get(ConfigReader.baseUrl() + URL_FRAGMENT);
+        return this;
+    }
+
+    // Confirms URL + one anchor element are ready — not a guarantee that
+    // every element on the page has rendered. Action methods below wait on
+    // their own targets individually.
+    public LoginPage waitUntilLoaded() {
+        wait.until(urlContains(URL_FRAGMENT));
         wait.until(visibilityOf(usernameField));
-        wait.until(visibilityOf(passwordField));
-        wait.until(elementToBeClickable(signInButton));
+        return this;
     }
 
-    public void login(String username, String password) {
-        usernameField.clear();
-        usernameField.sendKeys(username);
-        passwordField.clear();
-        passwordField.sendKeys(password);
-        signInButton.click();
+    // Does not return the next page — login can succeed (call goToDashboard())
+    // or fail (call getErrorMessage()), so the caller decides which applies.
+    public LoginPage login(String username, String password) {
+        wait.until(visibilityOf(usernameField)).sendKeys(username);
+        wait.until(visibilityOf(passwordField)).sendKeys(password);
+        wait.until(elementToBeClickable(signInButton)).click();
+        return this;
+    }
+
+    public DashboardPage goToDashboard() {
+        return new DashboardPage(driver).waitUntilLoaded();
     }
 
     public String getErrorMessage() {
         return wait.until(visibilityOf(errorAlert)).getText();
-    }
-
-    public void verifyLoggedOut() {
-        wait.until(visibilityOf(usernameField));
-        wait.until(visibilityOf(passwordField));
-        wait.until(elementToBeClickable(signInButton));
     }
 }

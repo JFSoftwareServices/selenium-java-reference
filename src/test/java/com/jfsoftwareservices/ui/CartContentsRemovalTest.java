@@ -1,27 +1,45 @@
 package com.jfsoftwareservices.ui;
 
-import com.jfsoftwareservices.base.AuthenticatedTest;
+import com.jfsoftwareservices.base.BaseTest;
+import com.jfsoftwareservices.pages.CartPage;
+import com.jfsoftwareservices.pages.DashboardPage;
+import com.jfsoftwareservices.pages.LoginPage;
 import com.jfsoftwareservices.testdata.OrderTestData;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 /**
- * Starts authenticated (see {@link AuthenticatedTest}) and mutates the
- * account's cart.
+ * Performs a canonical end-user journey for removing a product from the cart.
  */
-public class CartContentsRemovalTest extends AuthenticatedTest {
+public class CartContentsRemovalTest extends BaseTest {
 
-    @Test(description = "adds a product then removes it, leaving the cart empty")
-    public void addsThenRemovesProductLeavingCartEmpty() {
+    private LoginPage loginPage;
+
+    @BeforeMethod(dependsOnMethods = "setUpDriver")
+    public void navigateToLoginPage() {
+        loginPage = new LoginPage(driver).navigateTo();
+    }
+
+    @Test(description = "logs in, adds a product to cart, removes it, and verifies the cart is empty")
+    public void logsInAddsThenRemovesProductLeavingCartEmpty() {
+
         String productName = OrderTestData.DEFAULT.productName();
 
-        pages.headerComponent.goHome();
-        pages.dashboardPage.addProductToCart(productName);
+        DashboardPage dashboardPage = loginPage
+                .login(testUserEmail, testUserPassword)
+                .goToDashboard();
 
-        pages.headerComponent.navigateToCart();
-        pages.cartPage.waitForPageToLoad();
-        pages.cartPage.verifyProductIsDisplayed(productName);
+        dashboardPage.addProductToCart(productName);
+        dashboardPage.header().waitForCartCount(1);
 
-        pages.cartPage.removeFromCart(productName);
-        pages.cartPage.verifyCartEmpty();
+        CartPage cartPage = dashboardPage
+                .header()
+                .clickCart();
+
+        cartPage.verifyProductIsDisplayed(productName);
+
+        cartPage
+                .removeFromCart(productName)
+                .verifyCartEmpty();
     }
 }

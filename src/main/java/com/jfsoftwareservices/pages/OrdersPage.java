@@ -1,5 +1,7 @@
 package com.jfsoftwareservices.pages;
 
+import com.jfsoftwareservices.config.ConfigReader;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -11,9 +13,11 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import java.time.Duration;
 import java.util.List;
 
-public class OrdersHistoryPage {
+public class OrdersPage {
 
+    private final WebDriver driver;
     private final WebDriverWait wait;
+    private static final String URL_FRAGMENT = "#/dashboard/myorders";
 
     @FindBy(css = "tbody")
     private WebElement ordersTable;
@@ -24,14 +28,24 @@ public class OrdersHistoryPage {
     @FindBy(css = ".col-text")
     private WebElement orderIdDetails;
 
-    public OrdersHistoryPage(WebDriver driver) {
+    public OrdersPage(WebDriver driver) {
+        this.driver = driver;
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-
         PageFactory.initElements(driver, this);
     }
 
-    public void waitForPageToLoad() {
+    public OrdersPage navigateTo() {
+        driver.get(ConfigReader.baseUrl() + URL_FRAGMENT);
+        return waitUntilLoaded();
+    }
+
+    // Confirms URL + one anchor element are ready — not a guarantee that
+    // every element on the page has rendered. Action methods below wait on
+    // their own targets individually.
+    public OrdersPage waitUntilLoaded() {
+        wait.until(ExpectedConditions.urlContains(URL_FRAGMENT));
         wait.until(ExpectedConditions.visibilityOf(ordersTable));
+        return this;
     }
 
     public WebElement findOrderRow(String orderId) {
@@ -44,28 +58,16 @@ public class OrdersHistoryPage {
 
         if (matching.isEmpty()) {
             throw new IllegalStateException(
-                    "Order \"" + orderId + "\" not found in order history."
-            );
+                    "Order \"" + orderId + "\" not found in order history.");
         }
 
         return matching.get(0);
     }
 
-    public void selectOrder(String orderId) {
+    public OrderDetailsPage selectOrder(String orderId) {
         WebElement row = findOrderRow(orderId);
-
-        wait.until(driver ->
-                row.findElement(By.tagName("button")).isDisplayed()
-        );
-
+        wait.until(driver -> row.findElement(By.tagName("button")).isDisplayed());
         row.findElement(By.tagName("button")).click();
-    }
-
-    public String getOrderId() {
-        String raw = wait.until(
-                ExpectedConditions.visibilityOf(orderIdDetails)
-        ).getText();
-
-        return raw == null ? null : raw.replace("|", "").trim();
+        return new OrderDetailsPage(driver).waitUntilLoaded();
     }
 }
