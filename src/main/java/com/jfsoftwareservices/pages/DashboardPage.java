@@ -19,7 +19,7 @@ public class DashboardPage {
     private final HeaderComponent header;
     private final WebDriver driver;
     private final WebDriverWait wait;
-    private static final String URL_FRAGMENT = "client/#/dashboard/dash";
+    private static final String URL_FRAGMENT = "/client/#/dashboard/dash";
     private static final By PRODUCT_CARD = By.cssSelector(".card-body");
 
     public DashboardPage(WebDriver driver) {

@@ -18,7 +18,7 @@ public class LoginPage {
     private final WebDriver driver;
     private final WebDriverWait wait;
 
-    private static final String URL_FRAGMENT = "client/#/auth/login";
+    private static final String URL_FRAGMENT = "/client/#/auth/login";
 
     @FindBy(id = "login")
     private WebElement signInButton;

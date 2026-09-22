@@ -17,7 +17,7 @@ public class OrderDetailsPage {
 
     private final WebDriver driver;
     private final WebDriverWait wait;
-    private static final String URL_FRAGMENT = "#/dashboard/order-details";
+    private static final String URL_FRAGMENT = "/#/dashboard/order-details";
 
     @FindBy(css = ".email-wrapper")
     private WebElement orderConfirmation;
