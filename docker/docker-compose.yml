@@ -7,7 +7,8 @@
 # Run the test suite against Selenium Grid with two Chrome nodes:
 #
 #   TEST_RUNNER_IMAGE=selenium-java-automation:test \
-#   docker compose -f docker/docker-compose.yml up \
+#   docker compose --env-file .env \
+#     -f docker/docker-compose.yml up \
 #     --scale chrome=2 \
 #     --exit-code-from tests
 #
@@ -35,7 +36,7 @@
 # browser environment to a specific image build. Upgrade the tag deliberately
 # when updating the Selenium/Chrome execution environment.
 #
-# The same Compose file can be used locally, in Jenkins, and on AWS EC2.
+# The same Compose file can be used locally, in GitHub Actions, and on AWS EC2.
 # See docs/AWS_EC2_SETUP.md for EC2-specific setup steps.
 
 
@@ -82,7 +83,7 @@ services:
 
 
   tests:
-    # Jenkins supplies TEST_RUNNER_IMAGE.
+    # CI supplies TEST_RUNNER_IMAGE.
     # Local execution defaults to the locally built test image.
     image: ${TEST_RUNNER_IMAGE:-selenium-java-automation:test}
 
@@ -94,6 +95,7 @@ services:
 
     environment:
       GRID_URL: http://selenium-hub:4444/wd/hub
+      BASE_URL: ${BASE_URL}
       TEST_BROWSER: chrome
       HEADLESS: "true"
 
