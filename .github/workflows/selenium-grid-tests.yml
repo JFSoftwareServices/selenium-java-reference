@@ -31,6 +31,8 @@ jobs:
       TEST_RUNNER_IMAGE: selenium-java-automation:${{ github.run_number }}
       CHROME_NODES: ${{ inputs.chrome_nodes || '2' }}
       BASE_URL: https://www.rahulshettyacademy.com/client
+      TEST_USERNAME: ${{ secrets.TEST_USERNAME }}
+      TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
 
     steps:
 
