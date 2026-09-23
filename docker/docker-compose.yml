@@ -96,6 +96,12 @@ services:
     environment:
       GRID_URL: http://selenium-hub:4444/wd/hub
       BASE_URL: ${BASE_URL}
+      
+      # CI passes test credentials from GitHub Actions Secrets into the test container.
+      # These variables are not required for local runs; ConfigReader reads them from .env.
+      TEST_USER_EMAIL: ${TEST_USER_EMAIL}
+      TEST_USER_PASSWORD: ${TEST_USER_PASSWORD}
+
       TEST_BROWSER: chrome
       HEADLESS: "true"
 

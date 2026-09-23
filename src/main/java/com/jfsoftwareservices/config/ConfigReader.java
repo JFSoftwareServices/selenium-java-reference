@@ -6,8 +6,8 @@ import io.github.cdimascio.dotenv.Dotenv;
  * Central configuration access point.
  * <p>
  * Resolution order for every key is: real process environment variable first
- * (so Docker Compose, Jenkins, and GitHub Actions secrets always win), then
- * the local {@code .env} file (for IntelliJ / day-to-day local runs).
+ * (so Docker Compose and GitHub Actions environment variables always win),
+ * then the local {@code .env} file (for IntelliJ / day-to-day local runs).
  */
 public final class ConfigReader {
 
@@ -52,7 +52,7 @@ public final class ConfigReader {
     /**
      * URL of a running Selenium Grid hub, e.g.
      * {@code http://selenium-hub:4444/wd/hub}
-     * when running under docker-compose. Null/blank means "run locally via
+     * when running under Docker Compose. Null/blank means "run locally via
      * WebDriverManager", which is also the default for IntelliJ.
      */
     public static String gridUrl() {
@@ -63,14 +63,16 @@ public final class ConfigReader {
         return Boolean.parseBoolean(get("HEADLESS", "false"));
     }
 
-    private static String require(String key) {
-        String value = get(key);
-        if (value == null || value.isBlank()) {
-            throw new IllegalStateException(
-                    "Required configuration '" + key + "' is not set. "
-                            + "Set it as an environment variable or in a local .env file "
-                            + "(see .env.example).");
-        }
-        return value;
+   private static String require(String key) {
+    String value = get(key);
+
+    if (value == null || value.isBlank()) {
+        throw new IllegalStateException(
+                "Required configuration '" + key + "' is not set. "
+                        + "Set it as an environment variable, or for local development, "
+                        + "set it in a .env file (see .env.example).");
     }
+
+    return value;
+}
 }
