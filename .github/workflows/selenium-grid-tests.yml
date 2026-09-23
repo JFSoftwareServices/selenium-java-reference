@@ -1,0 +1,79 @@
+name: Selenium Grid Tests
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+    inputs:
+      chrome_nodes:
+        description: 'Number of Chrome Selenium Grid nodes'
+        required: true
+        default: '2'
+        type: choice
+        options:
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+
+jobs:
+  selenium-tests:
+
+    runs-on: ubuntu-latest
+
+    env:
+      TEST_RUNNER_IMAGE: selenium-java-automation:${{ github.run_number }}
+      CHROME_NODES: ${{ inputs.chrome_nodes || '2' }}
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Show Docker versions
+        run: |
+          docker --version
+          docker compose version
+
+      - name: Build test runner image
+        run: |
+          docker build \
+            -f docker/Dockerfile \
+            -t ${TEST_RUNNER_IMAGE} \
+            .
+
+      - name: Run Selenium Grid tests
+        run: |
+          TEST_RUNNER_IMAGE=${TEST_RUNNER_IMAGE} \
+          docker compose \
+            -f docker/docker-compose.yml \
+            up \
+            --scale chrome=${CHROME_NODES} \
+            --exit-code-from tests
+
+      - name: Publish test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            target/surefire-reports/
+            target/test-output/
+          if-no-files-found: ignore
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker compose \
+            -f docker/docker-compose.yml \
+            down \
+            --volumes \
+            --remove-orphans
+
+          docker image rm ${TEST_RUNNER_IMAGE} || true
