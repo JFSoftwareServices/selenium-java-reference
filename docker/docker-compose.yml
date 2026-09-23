@@ -1,30 +1,43 @@
 # Run from the project root:
 #
-#   docker compose -f docker/docker-compose.yml up --build --scale chrome=2 --exit-code-from tests
+# Build the test-runner image locally:
 #
-# This runs the TestNG suite in parallel across multiple Chrome sessions
-# distributed by Selenium Grid across the Chrome nodes.
+#   docker build -f docker/Dockerfile -t selenium-java-automation:test .
+#
+# Run the test suite against Selenium Grid with two Chrome nodes:
+#
+#   TEST_RUNNER_IMAGE=selenium-java-automation:test \
+#   docker compose -f docker/docker-compose.yml up \
+#     --scale chrome=2 \
+#     --exit-code-from tests
 #
 # Each Chrome node supports up to four concurrent sessions.
-# With two nodes:
 #
-#   2 nodes × 4 sessions = 8 concurrent Chrome sessions
+# Two nodes:
 #
-# Scale browser nodes for additional parallel capacity, for example:
+#   2 nodes × 4 sessions = 8 concurrent browser sessions
 #
-#   docker compose -f docker/docker-compose.yml up --build --scale chrome=3 --abort-on-container-exit
+# Scale browser nodes for additional Grid capacity, for example:
 #
-# Three nodes provide:
+#   TEST_RUNNER_IMAGE=selenium-java-automation:test \
+#   docker compose -f docker/docker-compose.yml up \
+#     --scale chrome=3 \
+#     --exit-code-from tests
 #
-#   3 nodes × 4 sessions = 12 concurrent Chrome sessions
+# Three nodes:
+#
+#   3 nodes × 4 sessions = 12 concurrent browser sessions
+#
+# TestNG controls test parallelism; Selenium Grid distributes WebDriver
+# sessions across the available Chrome node capacity.
 #
 # Selenium images use a dated tag (4.49.0-20260909) to pin the Grid and
-# browser environment to a specific image build, providing reproducible
-# test runs. Upgrade the tag deliberately when updating the Selenium/Chrome
-# execution environment.
+# browser environment to a specific image build. Upgrade the tag deliberately
+# when updating the Selenium/Chrome execution environment.
 #
-# The same Compose file is used locally, in Jenkins, and on the AWS EC2 host.
+# The same Compose file can be used locally, in Jenkins, and on AWS EC2.
 # See docs/AWS_EC2_SETUP.md for EC2-specific setup steps.
+
 
 services:
 
@@ -69,9 +82,9 @@ services:
 
 
   tests:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
+    # Jenkins supplies TEST_RUNNER_IMAGE.
+    # Local execution defaults to the locally built test image.
+    image: ${TEST_RUNNER_IMAGE:-selenium-java-automation:test}
 
     container_name: selenium-tests
 
